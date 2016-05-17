@@ -1,11 +1,11 @@
-(define (check-solution board actual)
+(define (check-solution guess pattern)
   
   (define (count-occurrences x col)
     (cond ((null? x) 0)
           (else (if (eq? (car x) col) (+ 1 (count-occurrences (cdr x) col)) (+ 0 (count-occurrences (cdr x) col))))))
   
   (define (nth-occur-of-color x index counter)
-    (let ((color-at (list-ref board index)))
+    (let ((color-at (list-ref guess index)))
       (cond ((>= counter index) 0)
             (else
              (cond
@@ -13,15 +13,15 @@
                (else (nth-occur-of-color (cdr x) index (+ 1 counter)))) ))))
   (define (number-of-correct col)
     (apply +
-           (map (lambda (a b) (if (and (eq? a b) (eq? a col)) 1 0)) board actual)))
+           (map (lambda (a b) (if (and (eq? a b) (eq? a col)) 1 0)) guess pattern)))
   
   (define (check-iter index)
-    (cond ((>= index (length actual)) '())
+    (cond ((>= index (length pattern)) '())
           (else 
-           (cond ((eq? (list-ref board index) (list-ref actual index)) (cons 'b (check-iter (+ 1 index))))
+           (cond ((eq? (list-ref guess index) (list-ref pattern index)) (cons 'b (check-iter (+ 1 index))))
                  ((and
-                   (not (zero? (count-occurrences actual (list-ref board index))))
-                   (<= (+ (nth-occur-of-color board index 0) (number-of-correct (list-ref board index)))  (count-occurrences actual (list-ref board index))))
+                   (not (zero? (count-occurrences pattern (list-ref guess index))))
+                   (<= (+ (nth-occur-of-color guess index 0) (number-of-correct (list-ref guess index)))  (count-occurrences pattern (list-ref guess index))))
                   (cons 'w (check-iter (+ 1 index))))
                  (else (cons 'e (check-iter (+ 1 index))))))))
   
