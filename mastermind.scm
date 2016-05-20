@@ -1,3 +1,14 @@
+(load "Untitled.rkt")
+; right-now : -> moment
+(define (right-now)
+  (call-with-current-continuation 
+   (lambda (cc) 
+     (cc cc))))
+
+; go-when : moment -> ...
+(define (go-when then)
+  (then then))
+
 (define (check-solution board actual)
   
   (define (count-occurrences x col)
@@ -38,21 +49,21 @@
   (cond ((> a b) '())
         (else (cons a (enumerate-integers (+ 1 a) b)))))
 
-(define (filter seq p?)
+(define (mfilter seq p?)
   (cond ((null? seq) '())
-        ((p? (car seq)) (cons (car seq) (filter (cdr seq) p?)))
-        (else (filter (cdr seq) p?))))
+        ((p? (car seq)) (cons (car seq) (mfilter (cdr seq) p?)))
+        (else (mfilter (cdr seq) p?))))
 
 ;Generates all possible quadruples given a list of four lists
 (define (quads qlist)
-   (flatmap (lambda (i)
-              (flatmap (lambda (j)
-                     (flatmap (lambda (k)
-                            (map (lambda (l)
-                                 (list i j k l)) (cadddr qlist))) (caddr qlist))) (cadr qlist)))  (car qlist)))
+  (flatmap (lambda (i)
+             (flatmap (lambda (j)
+                        (flatmap (lambda (k)
+                                   (map (lambda (l)
+                                          (list i j k l)) (cadddr qlist))) (caddr qlist))) (cadr qlist)))  (car qlist)))
 (define (count-occurrences x col)
-    (cond ((null? x) 0)
-          (else (if (eq? (car x) col) (+ 1 (count-occurrences (cdr x) col)) (+ 0 (count-occurrences (cdr x) col))))))
+  (cond ((null? x) 0)
+        (else (if (eq? (car x) col) (+ 1 (count-occurrences (cdr x) col)) (+ 0 (count-occurrences (cdr x) col))))))
 (define myand (lambda (x y) (and x y)))
 
 
@@ -60,16 +71,48 @@
 ;ie ((w 2) (b 1)) means there must be 2 ws and 1 b)
 
 (define (meets-requirements megalist requirements)
-  (filter megalist (lambda (lst) (accumulate myand #t (map (lambda (req) (>= (count-occurrences lst (car req)) (cadr req))) requirements)))))
+  (mfilter megalist (lambda (lst) (accumulate myand #t (map (lambda (req) (>= (count-occurrences lst (car req)) (cadr req))) requirements)))))
 
 ;Test case
 
 (define check-my-solution
   (lambda (board) (check-solution board '(r g g k))))
-(map check-my-solution (quads '((r g b y) (r g b y) (r g b y) (r g b y))))
+;(map check-my-solution (quads '((r g b y) (r g b y) (r g b y) (r g b y))))
 
 ;This solves the problem.
 (define colorarray (list 'r 'g 'b 'y 'w 'k 'o 'p))
-(quads (list colorarray colorarray colorarray colorarray))
-(display "CORRECT SOLUTION:")
-(filter (quads (list colorarray colorarray colorarray colorarray)) (lambda (q) (equal? (check-my-solution q) '(b b b b))))
+;(quads (list colorarray colorarray colorarray colorarray))
+;(display "CORRECT SOLUTION:")
+;(mfilter (quads (list colorarray colorarray colorarray colorarray)) (lambda (q) (equal? (check-my-solution q) '(b b b b))))
+
+
+;Now using amb...
+;All we need now is the updating of requirements
+(define (meets-reqs? guess requirements)
+  (accumulate myand #t (map (lambda (req) (>= (count-occurrences guess (car req)) (cadr req))) requirements)))
+
+(define allpossibilities (list colorarray colorarray colorarray colorarray))
+
+;This following loop runs once, changes the requirements, runs again, and terminates
+
+;The program:
+(define reqs '((b 0))) ;Minimum of each color
+(define optns (list colorarray colorarray colorarray colorarray)) ;Array of possible colors for each spot
+(define (make-guess array);generates a guess using amb
+  (cons (an-element-of (car array)) (cons (an-element-of (cadr array)) (cons (an-element-of (caddr array)) (cons (an-element-of (cadddr array)) '() )))))
+
+(let ((the-beginning (right-now)))
+  (let ((guess (make-guess optns)))
+    (assert (meets-reqs? guess reqs)) ;Arbitrary reqs
+    (newline)
+    (display "MY GUESS:")
+    (newline)
+    (display guess)
+    (newline)
+    (display "THE RESULT:")
+    (newline)
+    (display (check-solution guess '(k g y g)))
+    ;(assert (equal? (check-solution guess '(r r r r)) '(b b b b)))
+    (cond ((equal? (check-solution guess '(r g b y)) '(b b b b)) (newline) guess)
+          (else(go-when the-beginning)))))
+    
