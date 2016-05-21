@@ -85,7 +85,6 @@
 ;(display "CORRECT SOLUTION:")
 ;(mfilter (quads (list colorarray colorarray colorarray colorarray)) (lambda (q) (equal? (check-my-solution q) '(b b b b))))
 
-
 ;Now using amb...
 ;All we need now is the updating of requirements
 (define (meets-reqs? guess requirements)
@@ -95,11 +94,33 @@
 
 ;This following loop runs once, changes the requirements, runs again, and terminates
 
+
+(define (update total-guess total-feedback)
+  (define (inner-update poss feedback guess)
+    (cond ((eq? feedback 'b) (list guess))
+          ((eq? feedback 'w) (remove guess poss))
+          ((eq? feedback 'e) (remove guess poss))))
+  (list (inner-update (car poss) (car total-feedback) (car total-guess))
+        (inner-update (cadr poss) (cadr total-feedback) (cadr total-guess))
+        (inner-update (caddr poss) (caddr total-feedback) (caddr total-guess))
+        (inner-update (cadddr poss) (cadddr total-feedback) (cadddr total-guess))))
+
+
 ;The program:
 (define reqs '((b 0))) ;Minimum of each color
 (define optns (list colorarray colorarray colorarray colorarray)) ;Array of possible colors for each spot
 (define (make-guess array);generates a guess using amb
   (cons (an-element-of (car array)) (cons (an-element-of (cadr array)) (cons (an-element-of (caddr array)) (cons (an-element-of (cadddr array)) '() )))))
+
+(define (update total-guess total-feedback)
+  (define (inner-update optns feedback guess)
+    (cond ((eq? feedback 'b) (list guess))
+          ((eq? feedback 'w) (remove guess optns))
+          ((eq? feedback 'e) (remove guess optns))))
+  (list (inner-update (car optns) (car total-feedback) (car total-guess))
+        (inner-update (cadr optns) (cadr total-feedback) (cadr total-guess))
+        (inner-update (caddr optns) (caddr total-feedback) (caddr total-guess))
+        (inner-update (cadddr optns) (cadddr total-feedback) (cadddr total-guess))))
 
 (let ((the-beginning (right-now)))
   (let ((guess (make-guess optns)))
@@ -114,5 +135,6 @@
     (display (check-solution guess '(k g y g)))
     ;(assert (equal? (check-solution guess '(r r r r)) '(b b b b)))
     (cond ((equal? (check-solution guess '(r g b y)) '(b b b b)) (newline) guess)
-          (else(go-when the-beginning)))))
+          (else (begin (set! optns (update guess (check-solution guess '(k g y g))))
+                       (go-when the-beginning))))))
     
