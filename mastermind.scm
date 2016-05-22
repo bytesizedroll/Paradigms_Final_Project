@@ -1,4 +1,5 @@
 (load "Untitled.rkt")
+
 ; right-now : -> moment
 (define (right-now)
   (call-with-current-continuation 
@@ -9,6 +10,7 @@
 (define (go-when then)
   (then then))
 
+;Function to check a single guess agains the correct result, returns feedback in the form of a list.
 (define (check-solution board actual)
   
   (define (count-occurrences x col)
@@ -38,6 +40,7 @@
   
   (check-iter 0))
 
+;Helper functions
 (define (accumulate op init seq)
   (cond ((null? seq) init)
         (else (op (car seq) (accumulate op init (cdr seq))))))
@@ -73,26 +76,12 @@
 (define (meets-requirements megalist requirements)
   (mfilter megalist (lambda (lst) (accumulate myand #t (map (lambda (req) (>= (count-occurrences lst (car req)) (cadr req))) requirements)))))
 
-;Test case
-
-(define check-my-solution
-  (lambda (board) (check-solution board '(r g g k))))
-;(map check-my-solution (quads '((r g b y) (r g b y) (r g b y) (r g b y))))
-
-;This solves the problem.
-(define colorarray (list 'r 'g 'b 'y 'w 'k 'o 'p))
-;(quads (list colorarray colorarray colorarray colorarray))
-;(display "CORRECT SOLUTION:")
-;(mfilter (quads (list colorarray colorarray colorarray colorarray)) (lambda (q) (equal? (check-my-solution q) '(b b b b))))
 
 ;Now using amb...
 ;All we need now is the updating of requirements
 (define (meets-reqs? guess requirements)
   (accumulate myand #t (map (lambda (req) (>= (count-occurrences guess (car req)) (cadr req))) requirements)))
 
-(define allpossibilities (list colorarray colorarray colorarray colorarray))
-
-;This following loop runs once, changes the requirements, runs again, and terminates
 
 ;Update function to update list of possibilities for each peg based on previous guess and result
 (define (update total-guess total-feedback)
@@ -106,12 +95,19 @@
         (inner-update (cadddr poss) (cadddr total-feedback) (cadddr total-guess))))
 
 
-;The program:
 (define reqs '((b 0))) ;Minimum of each color
-(define optns (list colorarray colorarray colorarray colorarray)) ;Array of possible colors for each spot
-(define (make-guess array);generates a guess using amb
+
+;Create of all color possibilities for one spot.
+(define colorarray (list 'r 'g 'b 'y 'w 'k 'o 'p))
+
+;Optns is list of lists that contain possible pegs for each spot.
+(define optns (list colorarray colorarray colorarray colorarray))
+
+;Function to generate guess using amb
+(define (make-guess array)
   (cons (an-element-of (car array)) (cons (an-element-of (cadr array)) (cons (an-element-of (caddr array)) (cons (an-element-of (cadddr array)) '() )))))
 
+;Update function to update guess after receiving the feedback from the previous guess.
 (define (update total-guess total-feedback)
   (define (inner-update optns feedback guess)
     (cond ((eq? feedback 'b) (list guess))
@@ -122,11 +118,13 @@
         (inner-update (caddr optns) (caddr total-feedback) (caddr total-guess))
         (inner-update (cadddr optns) (cadddr total-feedback) (cadddr total-guess))))
 
+;Pattern variable that sets what the correct pattern is.
 (define pattern '(o g b k))
 
+;Actual program, tests guess and updates guess until the correct pattern is reached.
 (let ((the-beginning (right-now)))
   (let ((guess (make-guess optns)))
-    (assert (meets-reqs? guess reqs)) ;Arbitrary reqs
+    (assert (meets-reqs? guess reqs))
     (newline)
     (display "MY GUESS:")
     (newline)
@@ -135,7 +133,7 @@
     (display "THE RESULT:")
     (newline)
     (display (check-solution guess pattern))
-    (cond ((equal? (check-solution guess pattern) '(b b b b)) (newline) (newline) (display "____We Did It!!____") (newline) (display"|     O     O     |") (newline) (display"|     <----->     |"))
+    (cond ((equal? (check-solution guess pattern) '(b b b b)) (newline) (newline) (display "____We Did It!!____") (newline) (display"|     (°_o)/¯     |"))
           (else (begin (set! optns (update guess (check-solution guess pattern)))   
                        (go-when the-beginning))))))
     
