@@ -94,7 +94,7 @@
 
 ;This following loop runs once, changes the requirements, runs again, and terminates
 
-
+;Update function to update list of possibilities for each peg based on previous guess and result
 (define (update total-guess total-feedback)
   (define (inner-update poss feedback guess)
     (cond ((eq? feedback 'b) (list guess))
@@ -122,6 +122,8 @@
         (inner-update (caddr optns) (caddr total-feedback) (caddr total-guess))
         (inner-update (cadddr optns) (cadddr total-feedback) (cadddr total-guess))))
 
+(define pattern '(o g b k))
+
 (let ((the-beginning (right-now)))
   (let ((guess (make-guess optns)))
     (assert (meets-reqs? guess reqs)) ;Arbitrary reqs
@@ -132,9 +134,8 @@
     (newline)
     (display "THE RESULT:")
     (newline)
-    (display (check-solution guess '(k g y g)))
-    ;(assert (equal? (check-solution guess '(r r r r)) '(b b b b)))
-    (cond ((equal? (check-solution guess '(r g b y)) '(b b b b)) (newline) guess)
-          (else (begin (set! optns (update guess (check-solution guess '(k g y g))))
+    (display (check-solution guess pattern))
+    (cond ((equal? (check-solution guess pattern) '(b b b b)) (newline) (newline) (display "____We Did It!!____") (newline) (display"|     O     O     |") (newline) (display"|     <----->     |"))
+          (else (begin (set! optns (update guess (check-solution guess pattern)))   
                        (go-when the-beginning))))))
     
