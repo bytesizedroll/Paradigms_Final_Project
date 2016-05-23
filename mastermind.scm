@@ -101,7 +101,7 @@
 (define colorarray (list 'r 'g 'b 'y 'w 'k 'o 'p))
 
 ;Optns is list of lists that contain possible pegs for each spot.
-(define optns (list colorarray colorarray colorarray colorarray))
+(define optns (list colorarray (reverse colorarray) colorarray (reverse colorarray)))
 
 ;Function to generate guess using amb
 (define (make-guess array)
@@ -126,7 +126,7 @@
 
 
 ;Pattern variable that sets what the correct pattern is.
-(define pattern '(g y y w))
+(define pattern '(r g b y))
 
 ;Actual program, tests guess and updates guess until the correct pattern is reached.
 (let ((the-beginning (right-now)))
