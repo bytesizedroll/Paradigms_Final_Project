@@ -19,7 +19,7 @@
   
   (define (nth-occur-of-color x index counter)
     (let ((color-at (list-ref board index)))
-      (cond ((> counter index) 0)
+      (cond ((>= counter index) 0)
             (else
              (cond
                ((eq? color-at (car x)) (+ 1 (nth-occur-of-color (cdr x) index (+ 1 counter))))
@@ -66,7 +66,7 @@
                                           (list i j k l)) (cadddr qlist))) (caddr qlist))) (cadr qlist)))  (car qlist)))
 (define (count-occurrences x col)
   (cond ((null? x) 0)
-        (else (if (equal? (car x) col) (+ 1 (count-occurrences (cdr x) col)) (+ 0 (count-occurrences (cdr x) col))))))
+        (else (if (eq? (car x) col) (+ 1 (count-occurrences (cdr x) col)) (+ 0 (count-occurrences (cdr x) col))))))
 (define myand (lambda (x y) (and x y)))
 
 
@@ -118,24 +118,13 @@
         (inner-update (caddr optns) (caddr total-feedback) (caddr total-guess))
         (inner-update (cadddr optns) (cadddr total-feedback) (cadddr total-guess))))
 
-(define (update-reqs guess result)
-  (define pair-result (map (lambda (x y) (list x y)) guess result))
-  ;(display pair-result)
-  (map (lambda (x) (list x (+ (count-occurrences pair-result (list x 'w)) (count-occurrences  pair-result (list x 'b))))) guess))
-
-
-
 ;Pattern variable that sets what the correct pattern is.
-(define pattern '(g y y w))
+(define pattern '(o g b k))
 
 ;Actual program, tests guess and updates guess until the correct pattern is reached.
 (let ((the-beginning (right-now)))
   (let ((guess (make-guess optns)))
     (assert (meets-reqs? guess reqs))
-    (newline)
-    (display "CURRENT REQUIREMENTS")
-    (newline)
-    (display reqs)
     (newline)
     (display "MY GUESS:")
     (newline)
@@ -144,7 +133,7 @@
     (display "THE RESULT:")
     (newline)
     (display (check-solution guess pattern))
-    (set! reqs (update-reqs guess (check-solution guess pattern)))
     (cond ((equal? (check-solution guess pattern) '(b b b b)) (newline) (newline) (display "____We Did It!!____") (newline) (display"|     (°_o)/¯     |"))
           (else (begin (set! optns (update guess (check-solution guess pattern)))   
                        (go-when the-beginning))))))
+    
