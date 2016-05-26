@@ -12,7 +12,6 @@
 
 ;Function to check a single guess agains the correct result, returns feedback in the form of a list.
 (define (check-solution board actual)
-  
   (define (count-occurrences x col)
     (cond ((null? x) 0)
           (else (if (eq? (car x) col) (+ 1 (count-occurrences (cdr x) col)) (+ 0 (count-occurrences (cdr x) col))))))
@@ -24,6 +23,7 @@
              (cond
                ((eq? color-at (car x)) (+ 1 (nth-occur-of-color (cdr x) index (+ 1 counter))))
                (else (nth-occur-of-color (cdr x) index (+ 1 counter)))) ))))
+  
   (define (number-of-correct col)
     (apply +
            (map (lambda (a b) (if (and (eq? a b) (eq? a col)) 1 0)) board actual)))
@@ -37,7 +37,6 @@
                    (<= (+ (nth-occur-of-color board index 0) (number-of-correct (list-ref board index)))  (count-occurrences actual (list-ref board index))))
                   (cons 'w (check-iter (+ 1 index))))
                  (else (cons 'e (check-iter (+ 1 index))))))))
-  
   (check-iter 0))
 
 ;Helper functions
@@ -45,36 +44,11 @@
   (cond ((null? seq) init)
         (else (op (car seq) (accumulate op init (cdr seq))))))
 
-(define (flatmap proc seq)
-  (accumulate append '() (map proc seq)))
-
-(define (enumerate-integers a b)
-  (cond ((> a b) '())
-        (else (cons a (enumerate-integers (+ 1 a) b)))))
-
-(define (mfilter seq p?)
-  (cond ((null? seq) '())
-        ((p? (car seq)) (cons (car seq) (mfilter (cdr seq) p?)))
-        (else (mfilter (cdr seq) p?))))
-
-;Generates all possible quadruples given a list of four lists
-(define (quads qlist)
-  (flatmap (lambda (i)
-             (flatmap (lambda (j)
-                        (flatmap (lambda (k)
-                                   (map (lambda (l)
-                                          (list i j k l)) (cadddr qlist))) (caddr qlist))) (cadr qlist)))  (car qlist)))
+;KEEP HERE
 (define (count-occurrences x col)
   (cond ((null? x) 0)
         (else (if (equal? (car x) col) (+ 1 (count-occurrences (cdr x) col)) (+ 0 (count-occurrences (cdr x) col))))))
 (define myand (lambda (x y) (and x y)))
-
-
-;Filters a list of quadruples based on requirement lists (req lists -> list of pairs specifying minimums
-;ie ((w 2) (b 1)) means there must be 2 ws and 1 b)
-
-(define (meets-requirements megalist requirements)
-  (mfilter megalist (lambda (lst) (accumulate myand #t (map (lambda (req) (>= (count-occurrences lst (car req)) (cadr req))) requirements)))))
 
 
 ;Now using amb...
@@ -120,31 +94,20 @@
 
 (define (update-reqs guess result)
   (define pair-result (map (lambda (x y) (list x y)) guess result))
-  ;(display pair-result)
   (map (lambda (x) (list x (+ (count-occurrences pair-result (list x 'w)) (count-occurrences  pair-result (list x 'b))))) guess))
 
 
 
-;Pattern variable that sets what the correct pattern is.
-(define pattern '(r g b y))
-
 ;Actual program, tests guess and updates guess until the correct pattern is reached.
-(let ((the-beginning (right-now)))
-  (let ((guess (make-guess optns)))
-    (assert (meets-reqs? guess reqs))
-    (newline)
-    (display "CURRENT REQUIREMENTS")
-    (newline)
-    (display reqs)
-    (newline)
-    (display "MY GUESS:")
-    (newline)
-    (display guess)
-    (newline)
-    (display "THE RESULT:")
-    (newline)
-    (display (check-solution guess pattern))
-    (set! reqs (update-reqs guess (check-solution guess pattern)))
-    (cond ((equal? (check-solution guess pattern) '(b b b b)) (newline) (newline) (display "____We Did It!!____") (newline) (display"|     (°_o)/¯     |"))
-          (else (begin (set! optns (update guess (check-solution guess pattern)))   
-                       (go-when the-beginning))))))
+(define (solve-problem pattern)
+  (let ((the-beginning (right-now)))
+    (let ((guess (make-guess optns)))
+      (assert (meets-reqs? guess reqs))
+      (newline)
+      (display guess)
+      (display "| THE RESULT:")
+      (display (check-solution guess pattern))
+      (set! reqs (update-reqs guess (check-solution guess pattern)))
+      (cond ((equal? (check-solution guess pattern) '(b b b b)) (newline) (newline) (display "____We Did It!!____") (newline) (display"|     (°_o)/¯     |"))
+            (else (begin (set! optns (update guess (check-solution guess pattern)))   
+                         (go-when the-beginning)))))))
